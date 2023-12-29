@@ -4,7 +4,7 @@ from torchvision.utils import save_image
 from torch.optim import Adam
 
 from DDPM import Unet,Diffusion
-from utils import num_to_groups,img2tensor
+from utils import num_to_groups
 from dataset import createLoader
 
 timesteps=300

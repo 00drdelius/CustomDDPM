@@ -3,6 +3,9 @@ import torch
 from torchvision.transforms import (
     Compose,ToTensor,Lambda,ToPILImage,CenterCrop,Resize
 )
+from torchvision.transforms import InterpolationMode
+bilinear=InterpolationMode.BILINEAR
+bicubic=InterpolationMode.BICUBIC
 import numpy as np
 
 Tensor=torch.Tensor
@@ -66,19 +69,20 @@ def extract(a:Tensor, t:Tensor, x_shape):
     out = a.gather(-1, t.cpu())
     return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
 
-def img2tensor():
+def img2tensor_module():
     """
     Example
     ---
     preprocess=img2tensor()
 
     img: PIL.Image, shape:(H,W,C)\n
-    img=preprocess(img)\n
+    totensor=img2tensor_module()\n
+    img=totensor(img)\n
     img:shape(C,H,W)
     """
-    img_size=128
+    img_size=512
     transform=Compose([
-        Resize(img_size),
+        Resize(img_size,interpolation=bicubic),
         CenterCrop(img_size),
         ToTensor(), # turn into torch Tensor of shape CHW, divide by 255
         Lambda(lambda t:(t*2)-1)

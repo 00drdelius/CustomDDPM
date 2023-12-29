@@ -5,6 +5,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pickle as pkl
+from utils import img2tensor_module
 
 class ArknightsDataset(Dataset):
     def __init__(
@@ -22,9 +23,10 @@ class ArknightsDataset(Dataset):
             for img_path in data_dir.glob("*.jpg"):
                 character=img_path.name.split(".")[0]
                 img=Image.open(str(img_path))
+                totensor=img2tensor_module()
                 self.datas.append({
                     "character":character,
-                    "image":img
+                    "image":totensor(img)
                 })
             with cached_path.open('wb') as p:
                 pkl.dump(self.datas,p)
