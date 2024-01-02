@@ -1,8 +1,6 @@
-from typing import Any, Dict
 from torch.optim import Optimizer
 import torch
 from DDPM import Unet
-from torch.optim.optimizer import params_t
 
 
 class CustomLOMO(Optimizer):

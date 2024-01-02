@@ -1,0 +1,9 @@
+rich
+matplotlib
+tqdm
+einops
+numpy
+torch==2.1.2+cu118
+torchvision==0.16.2+cu118
+xformers==0.0.23.post1+cu118
+pynvml

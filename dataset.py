@@ -5,6 +5,7 @@ from typing import Any,Dict, Iterable, List, Optional,Union
 from rich import print
 from pathlib import Path
 from PIL import Image
+import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pickle as pkl
@@ -49,7 +50,8 @@ def createLoader(data_dir:Union[Path,str],refresh:bool):
     ArknightsDataLoader=DataLoader(
         dataset=arknightsDataset,
         batch_size=2,
-        shuffle=True
+        shuffle=True,
+        generator=torch.Generator(device="cuda")
     )
     return ArknightsDataLoader
 

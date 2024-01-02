@@ -69,7 +69,7 @@ def extract(a:Tensor, t:Tensor, x_shape):
     # Tensor.gather:
     # rearrange the indices of the element in the tensor in the specific dim, by indices t.
     # indices t: Tensor, elements in t must not exceed the max index in the dim 
-    out = a.gather(-1, t.cpu())
+    out = a.gather(-1, t)
     return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
 
 def img2tensor_module():

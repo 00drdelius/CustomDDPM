@@ -1,14 +1,15 @@
 import sys
 from pathlib import Path
 sys.path.append(Path(__file__).parent)
+from functools import partial
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import einsum
 from einops.layers.torch import Rearrange
 from einops import rearrange, reduce
-from functools import partial
 import math
+from xformers.ops import memory_efficient_attention
 
 from utils import *
 
@@ -122,7 +123,7 @@ class ResnetBlock(nn.Module):
             else None
         )
         self.block1=Block(dim,dim_out,groups=groups)
-        self.block2=Block(dim,dim_out,groups=groups)
+        self.block2=Block(dim_out,dim_out,groups=groups)
         self.res_conv=nn.Conv2d(dim, dim_out, 1) if dim !=dim_out else nn.Identity()
 
     def forward(self, x, time_emb:torch.Tensor=None):
@@ -165,8 +166,9 @@ class Attention(nn.Module):
 
 class LinearAttention(nn.Module):
     """
-    linear attention variant
-    https://github.com/lucidrains/linear-attention-transformer
+    linear attention variant\n
+    https://github.com/lucidrains/linear-attention-transformer\n
+    with xformers for memory efficiency
     """
     def __init__(self, dim, heads=4, dim_head=32):
         super().__init__()

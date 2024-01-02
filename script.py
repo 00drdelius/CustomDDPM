@@ -14,6 +14,9 @@ from dataset import createLoader
 console=Console(style="#fff385")
 print=console.print
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using device:",device)
+torch.set_default_device(device)
 torch.set_default_dtype(torch.float16)
 timesteps=300
 image_size=512
@@ -25,14 +28,12 @@ save_and_sample_every=1000
 results_folder=Path("results").__str__()
 
 arknightsDataLoader=createLoader("images",False)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print("Using device:",device)
+
 model = Unet(
     dim=image_size,
     channels=channels,
     dim_mults=(1,2,4,)
 )
-model.to(device)
 # optimizer = Adam(model.parameters(),lr=1e-3)
 optimizer = CustomLOMO(model,lr=learning_rate)
 
@@ -45,7 +46,7 @@ for epoch in range(epochs):
         else:
             batch_size=1
             batch=[batch['image']]
-        batch=torch.cat(batch,dim=0).to(device)
+        batch=torch.cat(batch,dim=0).cuda().to(torch.float16)
         print("batch size:",batch.shape)
         #sample t uniformally for every example in the batch
         t = torch.randint(0,timesteps,(batch_size,),device=device).long()

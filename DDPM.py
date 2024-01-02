@@ -152,7 +152,7 @@ class Diffusion:
 
         # define alphas
         self.alphas = 1. - self.betas
-        self.alphas_cumprod = torch.cumprod(self.alphas,dim=0)
+        self.alphas_cumprod = torch.cumprod(self.alphas,dim=0,dtype=torch.float16)
         # F.pad, accept a tensor for padded and pad_size=(1,0) and pad_value=1.0,
         # pad_size=(1,0) will pads the last dimension of the input tensor.
         # for instance, input:(1,2,2,5), pad_size=(1,0), pad_value=1.0; output:(1,2,2,6) with value all are 1.0.
