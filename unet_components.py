@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.append(Path(__file__).parent)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
