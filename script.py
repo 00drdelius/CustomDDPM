@@ -19,7 +19,7 @@ print("Using device:",device)
 torch.set_default_device(device)
 torch.set_default_dtype(torch.float16)
 timesteps=300
-image_size=512
+image_size=256
 channels=3
 epochs=2
 learning_rate=1e-4
@@ -53,11 +53,15 @@ for epoch in range(epochs):
         diffusion=Diffusion(timesteps,device)
         loss=diffusion.p_losses(model,batch,t,loss_type="l2")
 
-        if step % 2==0:
+        if step:
             print("Loss:", loss.item())
 
         loss.backward()
-        optimizer.step()
+        # update the last parameter since the last parameter in the computaiton graph is not ready when calling hook functions
+        # the argument of grad_func is just a placeholder, and it can be anything. 
+        optimizer.backword_hook(0)
+
+        # optimizer.step() already update parameters in hook function by SGD
 
         # save generated images
         if step != 0 and step % save_and_sample_every == 0:

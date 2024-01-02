@@ -27,7 +27,7 @@ class ArknightsDataset(Dataset):
             for img_path in data_dir.glob("*.jpg"):
                 character=img_path.name.split(".")[0]
                 img=Image.open(str(img_path))
-                totensor=img2tensor_module()
+                totensor=img2tensor_module(img_size=256)
                 self.datas.append({
                     "character":character,
                     "image":totensor(img)

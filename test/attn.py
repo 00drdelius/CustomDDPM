@@ -7,7 +7,7 @@ from xformers.ops import memory_efficient_attention as xf_attn
 console=Console(style="#ffef4d")
 print=console.print
 torch.set_default_device("cuda:0")
-torch.set_default_dtype(torch.float16)
+torch.set_default_dtype(torch.float32)
 class Attention(nn.Module):
     """
     linear attention variant\n
@@ -51,11 +51,13 @@ class Attention(nn.Module):
             out=rearrange(out,"b (x y) h c -> b (h c) x y", x=h,y=w,h=self.heads)
         print("output shape:"+str(out.shape))
         print("memory allocated:"+str(torch.cuda.memory_allocated("cuda:0")//1024**3)+"GB")
-        # return self.to_out(out)
-        return out
+        return self.to_out(out)
+        # return out
 
 ten=torch.randn(2,512,512,512)
+fixed=torch.arange(0,2*512*512*512).view(2,512,512,512).to(torch.float32)
+
 #q,k,v .shape: (2,4,32,512*512)
 #out.shape: (2,128,512,512)
 attention=Attention()
-attention(ten,xformer=False)
+attention(fixed,xformer=True)

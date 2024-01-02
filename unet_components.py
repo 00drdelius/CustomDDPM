@@ -9,7 +9,7 @@ from torch import einsum
 from einops.layers.torch import Rearrange
 from einops import rearrange, reduce
 import math
-from xformers.ops import memory_efficient_attention
+from xformers.ops import memory_efficient_attention as xf_attn
 
 from utils import *
 
@@ -167,8 +167,7 @@ class Attention(nn.Module):
 class LinearAttention(nn.Module):
     """
     linear attention variant\n
-    https://github.com/lucidrains/linear-attention-transformer\n
-    with xformers for memory efficiency
+    https://github.com/lucidrains/linear-attention-transformer
     """
     def __init__(self, dim, heads=4, dim_head=32):
         super().__init__()
@@ -195,6 +194,30 @@ class LinearAttention(nn.Module):
 
         out = torch.einsum("b h d e, b h d n -> b h e n", context, q)
         out = rearrange(out, "b h c (x y) -> b (h c) x y", h=self.heads, x=h, y=w)
+        return self.to_out(out)
+
+class XFAttention(nn.Module):
+    "Implement attention by xformers"
+    def __init__(self, dim, heads=4, dim_head=32):
+        super().__init__()
+        self.scale = dim_head**-0.5
+        self.heads = heads
+        hidden_dim = dim_head * heads
+        self.to_qkv = nn.Conv2d(dim, hidden_dim * 3, 1, bias=False)
+
+        self.to_out = nn.Sequential(nn.Conv2d(hidden_dim, dim, 1), 
+                                    nn.GroupNorm(1, dim))
+
+    def forward(self, x):
+        # print("attention xformers mode")
+        b, c, h, w = x.shape
+        qkv = self.to_qkv(x).chunk(3, dim=1)
+        q,k,v=map(
+            lambda t:rearrange(t, "b (h c) x y -> b (x y) h c", h=self.heads), qkv
+        )
+        q,k,v = map(lambda x:x.contiguous(), (q,k,v))
+        out = xf_attn(q,k,v,scale=self.scale)
+        out=rearrange(out,"b (x y) h c -> b (h c) x y", x=h,y=w,h=self.heads)
         return self.to_out(out)
 
 class PreNorm(nn.Module):

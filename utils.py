@@ -72,7 +72,7 @@ def extract(a:Tensor, t:Tensor, x_shape):
     out = a.gather(-1, t)
     return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
 
-def img2tensor_module():
+def img2tensor_module(img_size=256):
     """
     Example
     ---
@@ -83,7 +83,6 @@ def img2tensor_module():
     img=totensor(img)\n
     img:shape(C,H,W)
     """
-    img_size=512
     transform=Compose([
         Resize(img_size,interpolation=bicubic),
         CenterCrop(img_size),

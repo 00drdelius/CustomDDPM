@@ -23,7 +23,10 @@ class CustomLOMO(Optimizer):
         with torch.no_grad():
             for name,p in self.model.named_parameters():
                 if p.requires_grad is not None and p.grad is not None:
-                    if torch.isnan(p) or torch.isinf(p):
+                    if (
+                        torch.isnan(p.grad).any().item() or 
+                        torch.isinf(p.grad).any().item()
+                    ):
                         print(f"Detecting overflow in layer:{name}. Auto breaking..")
                         break
                     #SGD
