@@ -246,7 +246,7 @@ class Diffusion:
             noise=torch.randn_like(x)
             return model_mean+torch.sqrt(posterior_variance_t)*noise
 
-    @torch.no_grad
+    @torch.no_grad()
     def p_sample_loop(self,model,shape):
         device=next(model.parameters()).device
         b = shape[0]
