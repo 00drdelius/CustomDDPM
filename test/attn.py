@@ -7,7 +7,7 @@ from xformers.ops import memory_efficient_attention as xf_attn
 console=Console(style="#ffef4d")
 print=console.print
 torch.set_default_device("cuda:0")
-
+torch.set_default_dtype(torch.float16)
 class Attention(nn.Module):
     """
     linear attention variant\n
@@ -27,10 +27,11 @@ class Attention(nn.Module):
         print("input shape:"+str(x.shape))
         b, c, h, w = x.shape
         qkv = self.to_qkv(x).chunk(3, dim=1)
-        q, k, v = map(
-            lambda t: rearrange(t, "b (h c) x y -> b h c (x y)", h=self.heads), qkv
-        )
+
         if not xformer:
+            q, k, v = map(
+                lambda t: rearrange(t, "b (h c) x y -> b h c (x y)", h=self.heads), qkv
+            )
             print("attention normal mode")
             q = q.softmax(dim=-2)
             k = k.softmax(dim=-1)
@@ -42,10 +43,16 @@ class Attention(nn.Module):
             out = rearrange(out, "b h c (x y) -> b (h c) x y", h=self.heads, x=h, y=w)
         else:
             print("attention xformers mode")
+            q,k,v=map(
+                lambda t:rearrange(t, "b (h c) x y -> b (x y) h c", h=self.heads), qkv
+            )
+            q,k,v = map(lambda x:x.contiguous(), (q,k,v))
             out = xf_attn(q,k,v,scale=self.scale)
+            out=rearrange(out,"b (x y) h c -> b (h c) x y", x=h,y=w,h=self.heads)
         print("output shape:"+str(out.shape))
         print("memory allocated:"+str(torch.cuda.memory_allocated("cuda:0")//1024**3)+"GB")
-        return self.to_out(out)
+        # return self.to_out(out)
+        return out
 
 ten=torch.randn(2,512,512,512)
 #q,k,v .shape: (2,4,32,512*512)
