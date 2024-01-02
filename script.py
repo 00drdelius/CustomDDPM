@@ -1,14 +1,17 @@
 import sys
 from pathlib import Path
 sys.path.append(Path(__file__).parent)
-from pathlib import Path
 import torch
 from torchvision.utils import save_image
 from torch.optim import Adam
+from rich.console import Console
 
 from DDPM import Unet,Diffusion
 from utils import num_to_groups
 from dataset import createLoader
+
+console=Console(style="#fff385")
+print=console.print
 
 timesteps=300
 image_size=512
@@ -20,7 +23,7 @@ results_folder=Path("results").__str__()
 
 arknightsDataLoader=createLoader("images",False)
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
+print("Using device:",device)
 model = Unet(
     dim=image_size,
     channels=channels,
@@ -38,14 +41,14 @@ for epoch in range(epochs):
         else:
             batch_size=1
             batch=[batch['image']]
-        batch=torch.cat(batch,dim=0)
-        print(batch.shape)
+        batch=torch.cat(batch,dim=0).to(device)
+        print("batch size:",batch.shape)
         #sample t uniformally for every example in the batch
         t = torch.randint(0,timesteps,(batch_size,),device=device).long()
-        diffusion=Diffusion(timesteps)
+        diffusion=Diffusion(timesteps,device)
         loss=diffusion.p_losses(model,batch,t,loss_type="l2")
 
-        if step % 100==0:
+        if step % 2==0:
             print("Loss:", loss.item())
 
         loss.backward()

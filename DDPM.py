@@ -78,7 +78,7 @@ class Unet(nn.Module):
 
         mid_dim = dims[-1]
         self.mid_block1 = block_klass(mid_dim, mid_dim, time_emb_dim=time_dim)
-        self.mid_attn = Residual(PreNorm(mid_dim, Attention(mid_dim)))
+        self.mid_attn = Residual(PreNorm(mid_dim, LinearAttention(mid_dim)))
         self.mid_block2 = block_klass(mid_dim, mid_dim, time_emb_dim=time_dim)
 
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out)):
@@ -144,8 +144,9 @@ class Unet(nn.Module):
         return self.final_conv(x)
 
 class Diffusion:
-    def __init__(self,timesteps) -> None:
+    def __init__(self,timesteps,device) -> None:
         self.timesteps=timesteps
+        self.device=device
         # define beta schedule
         self.betas = linear_beta_schedule(timesteps=timesteps)
 
@@ -179,17 +180,17 @@ class Diffusion:
         q(x_t|x_0)
         """
         if noise is None:
-            noise = torch.randn_like(x_start) # random sample from StandNormalDist
+            noise = torch.randn_like(x_start,device=self.device) # random sample from StandNormalDist
         sqrt_alphas_cumprod_t=extract(
             self.sqrt_one_minus_alphas_cumprod,
             t,
             x_start.shape
-        )
+        ).to(self.device)
         sqrt_one_minus_alphas_cumprod_t=extract(
             self.sqrt_one_minus_alphas_cumprod,
             t,
             x_start.shape
-        )
+        ).to(self.device)
         return (
             sqrt_alphas_cumprod_t*x_start +  
             sqrt_one_minus_alphas_cumprod_t * noise
@@ -207,7 +208,7 @@ class Diffusion:
         sample,forward,predict and calculate losses
         """
         if not noise:
-            noise = torch.randn_like(x_start)
+            noise = torch.randn_like(x_start,device=self.device)
         
         x_noisy=self.q_sample(x_start,t,noise)
         predict_noise = denoise_model(x_noisy,t)
