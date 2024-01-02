@@ -11,7 +11,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from utils import *
+from utils import extract,default
 from unet_components import *
 from dif_components import *
 
@@ -167,6 +167,7 @@ class Diffusion:
         # calculations for posterior q(x_{t-1} | x_t, x_0)
         self.posterior_variance=self.betas*(1.-self.alphas_cumprod_prev)/(1.-self.alphas_cumprod)
 
+    @torch.no_grad()
     def q_sample(self,x_start,t,noise=None):
         """
         forward diffusion (using the nice property)\n

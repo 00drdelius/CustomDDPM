@@ -7,16 +7,19 @@ from torch.optim import Adam
 from rich.console import Console
 
 from DDPM import Unet,Diffusion
+from custom_lomo import CustomLOMO
 from utils import num_to_groups
 from dataset import createLoader
 
 console=Console(style="#fff385")
 print=console.print
 
+torch.set_default_dtype(torch.float16)
 timesteps=300
 image_size=512
 channels=3
 epochs=2
+learning_rate=1e-4
 
 save_and_sample_every=1000
 results_folder=Path("results").__str__()
@@ -30,7 +33,8 @@ model = Unet(
     dim_mults=(1,2,4,)
 )
 model.to(device)
-optimizer = Adam(model.parameters(),lr=1e-3)
+# optimizer = Adam(model.parameters(),lr=1e-3)
+optimizer = CustomLOMO(model,lr=learning_rate)
 
 for epoch in range(epochs):
     for step,batch in enumerate(arknightsDataLoader):
