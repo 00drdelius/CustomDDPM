@@ -5,6 +5,7 @@ import torch
 from torchvision.utils import save_image
 from torch.optim import Adam
 from rich.console import Console
+import json
 
 from DDPM import Unet,Diffusion
 from custom_lomo import CustomLOMO
@@ -27,13 +28,18 @@ learning_rate=1e-4
 save_and_sample_every=1000
 results_folder=Path("results").__str__()
 
-arknightsDataLoader=createLoader("images",False)
+arknightsDataLoader=createLoader("images",refresh=False)
 
 model = Unet(
     dim=image_size,
     channels=channels,
     dim_mults=(1,2,4,)
 )
+if not Path(__file__).parent.joinpath("params.json").exists():
+    #records the parameters name of model
+    params=[name for name,p in model.named_parameters() if p.requires_grad]
+    with open("params.json",'w',encoding='utf8') as jsn:
+        json.dump(params,jsn,ensure_ascii=False,indent=4)
 # optimizer = Adam(model.parameters(),lr=1e-3)
 optimizer = CustomLOMO(model,lr=learning_rate)
 
@@ -56,9 +62,10 @@ for epoch in range(epochs):
         if step:
             print("Loss:", loss.item())
 
-        loss.backward()
+        loss.backward(retain_graph=True)
         # update the last parameter since the last parameter in the computaiton graph is not ready when calling hook functions
-        # the argument of grad_func is just a placeholder, and it can be anything. 
+        # the argument of grad_func is just a placeholder, and it can be anything.
+        # 实测最后一层bias需要第二次才更新
         optimizer.backword_hook(0)
 
         # optimizer.step() already update parameters in hook function by SGD

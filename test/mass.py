@@ -13,7 +13,7 @@ in_channels=3
 out_channels=256
 
 def img2tensor_module():
-    size=512
+    size=256
     return Compose([
         Resize(size),
         CenterCrop(size),
@@ -45,6 +45,3 @@ def Downsample(dim, dim_out=None):
     )
 
 in_out=[(512,512),(512,1024),(1024,2048)]
-
-for dim_in,dim_out in in_out:
-    pass

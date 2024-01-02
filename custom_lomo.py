@@ -22,7 +22,8 @@ class CustomLOMO(Optimizer):
         "param:grad is necessary placeholder for registering hook function"
         with torch.no_grad():
             for name,p in self.model.named_parameters():
-                if p.requires_grad is not None and p.grad is not None:
+                if p.requires_grad and p.grad is not None:
+                    print("grad not None parameters:",name)
                     if (
                         torch.isnan(p.grad).any().item() or 
                         torch.isinf(p.grad).any().item()
@@ -35,3 +36,6 @@ class CustomLOMO(Optimizer):
                     p_fp32=p.data.to(torch.float32)
                     p_fp32.add_(grad_fp32,alpha=-self.lr)
                     p.data.copy_(p_fp32)
+                else:
+                    # print("grad None parameters:",name)
+                    pass
