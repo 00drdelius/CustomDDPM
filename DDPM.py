@@ -178,7 +178,7 @@ class Diffusion:
         ---
         q(x_t|x_0)
         """
-        if not noise:
+        if noise is None:
             noise = torch.randn_like(x_start) # random sample from StandNormalDist
         sqrt_alphas_cumprod_t=extract(
             self.sqrt_one_minus_alphas_cumprod,

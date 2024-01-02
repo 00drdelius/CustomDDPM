@@ -11,9 +11,9 @@ from utils import num_to_groups
 from dataset import createLoader
 
 timesteps=300
-image_size=None
+image_size=512
 channels=3
-epochs=0
+epochs=2
 
 save_and_sample_every=1000
 results_folder=Path("results").__str__()
@@ -32,9 +32,14 @@ optimizer = Adam(model.parameters(),lr=1e-3)
 for epoch in range(epochs):
     for step,batch in enumerate(arknightsDataLoader):
         optimizer.zero_grad()
-        batch_size=len(batch)
-        batch = [i for i in batch]
-
+        if isinstance(batch,list):
+            batch_size=len(batch)
+            batch = [i['image'] for i in batch]
+        else:
+            batch_size=1
+            batch=[batch['image']]
+        batch=torch.cat(batch,dim=0)
+        print(batch.shape)
         #sample t uniformally for every example in the batch
         t = torch.randint(0,timesteps,(batch_size,),device=device).long()
         diffusion=Diffusion(timesteps)

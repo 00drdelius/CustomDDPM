@@ -45,9 +45,10 @@ class ArknightsDataset(Dataset):
 
 def createLoader(data_dir:Union[Path,str],refresh:bool):
     arknightsDataset=ArknightsDataset(data_dir=data_dir,refresh=refresh)
+    print("length of dataset:",len(arknightsDataset))
     ArknightsDataLoader=DataLoader(
         dataset=arknightsDataset,
-        batch_size=1,
+        batch_size=2,
         shuffle=True
     )
     return ArknightsDataLoader

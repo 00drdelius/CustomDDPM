@@ -8,8 +8,8 @@ from PIL import Image
 import torch
 from torch import nn
 
-in_channels=None
-out_channels=None
+in_channels=3
+out_channels=256
 
 def img2tensor_module():
     size=512
