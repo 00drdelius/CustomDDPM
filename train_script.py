@@ -11,6 +11,7 @@ from DDPM import Unet,Diffusion
 from custom_lomo import CustomLOMO
 from utils import num_to_groups
 from dataset import createLoader
+from tqdm import tqdm
 
 console=Console(style="#fff385")
 print=console.print
@@ -19,16 +20,24 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using device:",device)
 torch.set_default_device(device)
 torch.set_default_dtype(torch.float16)
-timesteps=300
+data_dir="arknights_imgs"
+timesteps=400
 image_size=256
 channels=3
-epochs=2
-learning_rate=1e-4
+epochs=4
+learning_rate=1e-3
+batch_size=4
 
-save_and_sample_every=1000
-results_folder=Path("results").__str__()
+save_and_sample_every=100
+save_loss_lt=0.2
+cp_dir=Path(__file__).parent.joinpath("checkpoints")
+if not cp_dir.exists():
+    cp_dir.mkdir(parents=True)
+max_cps=4
+results_folder=Path(__file__).joinpath("results").__str__()
 
-arknightsDataLoader=createLoader("images",refresh=False)
+
+arknightsDataLoader=createLoader(data_dir,batch_size=batch_size,image_size=image_size,refresh=True)
 
 model = Unet(
     dim=image_size,
@@ -44,7 +53,9 @@ if not Path(__file__).parent.joinpath("params.json").exists():
 optimizer = CustomLOMO(model,lr=learning_rate)
 
 for epoch in range(epochs):
-    for step,batch in enumerate(arknightsDataLoader):
+    for step,batch in tqdm(
+        enumerate(arknightsDataLoader),desc=f"epoch_{epoch}",total=len(arknightsDataLoader)
+    ):
         optimizer.zero_grad()
         if isinstance(batch,list):
             batch_size=len(batch)
@@ -67,15 +78,15 @@ for epoch in range(epochs):
         # the argument of grad_func is just a placeholder, and it can be anything.
         # 实测最后一层bias需要第二次才更新
         optimizer.backword_hook(0)
-
         # optimizer.step() already update parameters in hook function by SGD
+        if epoch==epochs-1:
+            if loss.item()<=save_loss_lt:
+                if len(list(cp_dir.iterdir()))<max_cps:
+                    pass
+                else:
+                    first=list(cp_dir.iterdir())[-1]
+                    first.unlink(missing_ok=True)
+                # torch.save(model.state_dict(),str(cp_dir.joinpath(f"{epoch}_{step}.bin")))
+                torch.save(model,str(cp_dir.joinpath(f"{epoch}_{step}.bin")))
 
-        # save generated images
-        if step != 0 and step % save_and_sample_every == 0:
-            milestone = step // save_and_sample_every
-            batches = num_to_groups(4, batch_size)
-            all_images_list = list(map(lambda n: diffusion.sample(model, batch_size=n, channels=channels), batches))
-            all_images = torch.cat(all_images_list, dim=0)
-            all_images = (all_images + 1) * 0.5
-            save_image(all_images, str(results_folder / f'sample-{milestone}.png'), nrow = 6)
 

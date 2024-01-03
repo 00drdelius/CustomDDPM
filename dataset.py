@@ -15,6 +15,7 @@ class ArknightsDataset(Dataset):
     def __init__(
             self,
             data_dir:Union[Path,str],
+            image_size:int,
             refresh:bool=False
     ) -> None:
         super().__init__()
@@ -27,7 +28,7 @@ class ArknightsDataset(Dataset):
             for img_path in data_dir.glob("*.jpg"):
                 character=img_path.name.split(".")[0]
                 img=Image.open(str(img_path))
-                totensor=img2tensor_module(img_size=256)
+                totensor=img2tensor_module(img_size=image_size)
                 self.datas.append({
                     "character":character,
                     "image":totensor(img)
@@ -44,12 +45,12 @@ class ArknightsDataset(Dataset):
     def __getitem__(self, index) -> Dict:
         return self.datas[index]
 
-def createLoader(data_dir:Union[Path,str],refresh:bool):
-    arknightsDataset=ArknightsDataset(data_dir=data_dir,refresh=refresh)
+def createLoader(data_dir:Union[Path,str],batch_size,image_size,refresh:bool):
+    arknightsDataset=ArknightsDataset(data_dir=data_dir,image_size=image_size,refresh=refresh)
     print("length of dataset:",len(arknightsDataset))
     ArknightsDataLoader=DataLoader(
         dataset=arknightsDataset,
-        batch_size=2,
+        batch_size=batch_size,
         shuffle=True,
         generator=torch.Generator(device="cuda")
     )

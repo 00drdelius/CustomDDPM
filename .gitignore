@@ -1,5 +1,9 @@
 __pycache__
 fashion_mnist
 arknights_imgs
+checkpoints
+results
 *.rar
 *.zip
+*.pt
+*.bin

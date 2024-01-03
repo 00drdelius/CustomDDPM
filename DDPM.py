@@ -269,7 +269,7 @@ class Diffusion:
                 torch.full((b,),i,device=device,dtype=torch.long),
                 i
             )
-            imgs.append(img.cpu().numpy())
+            imgs.append(img)
         return imgs
 
     def sample(

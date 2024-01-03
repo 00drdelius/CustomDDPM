@@ -23,7 +23,7 @@ class CustomLOMO(Optimizer):
         with torch.no_grad():
             for name,p in self.model.named_parameters():
                 if p.requires_grad and p.grad is not None:
-                    print("grad not None parameters:",name)
+                    # print("grad not None parameters:",name)
                     if (
                         torch.isnan(p.grad).any().item() or 
                         torch.isinf(p.grad).any().item()

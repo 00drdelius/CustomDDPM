@@ -102,3 +102,8 @@ def tensor2img():
     ])
     return reverse_tranform
 
+if __name__ == '__main__':
+    batches=1
+    num=1
+    arr=num_to_groups(num,batches)
+    print(arr)
